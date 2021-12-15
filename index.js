@@ -41,7 +41,7 @@ async function run(){
         app.get('/appointments', async(req, res) =>{
           const email = req.query.email 
           const query = {email:email}
-          const cursor = appointmentCollection.find({query})
+          const cursor = appointmentCollection.find(query)
           const appointments = await cursor.toArray()
           res.json(appointments)
 
