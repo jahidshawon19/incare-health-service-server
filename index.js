@@ -24,12 +24,27 @@ async function run(){
         const database = client.db('incare_health')
         const appointmentCollection = database.collection('appointments')
 
+
+        //  POST API FOR APPOINTMENTS 
+
         app.post('/appointments', async(req, res) =>{
 
           const appointment = req.body 
           const result = await appointmentCollection.insertOne(appointment)
           res.json(result)
           
+        })
+
+
+        // GET APPOINTMENTS OF SPECIFIC USER BASED ON EMAIL
+
+        app.get('/appointments', async(req, res) =>{
+          const email = req.query.email 
+          const query = {email:email}
+          const cursor = appointmentCollection.find({query})
+          const appointments = await cursor.toArray()
+          res.json(appointments)
+
         })
   
 
