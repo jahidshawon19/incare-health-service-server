@@ -30,7 +30,7 @@ async function run(){
 
         //  POST API FOR APPOINTMENTS 
 
-        app.post('/appointments', async(req, res) =>{
+        app.post('/appointments', async (req, res) =>{
 
           const appointment = req.body 
           const result = await appointmentCollection.insertOne(appointment)
@@ -41,7 +41,7 @@ async function run(){
 
         // GET APPOINTMENTS OF SPECIFIC USER BASED ON EMAIL
 
-        app.get('/appointments', async(req, res) =>{
+        app.get('/appointments', async (req, res) =>{
           const email = req.query.email 
           const query = {email:email}
           const cursor = appointmentCollection.find(query)
@@ -61,9 +61,9 @@ async function run(){
 
         // PUT API FOR USERS THOSE ARE FROM SIGN IN WITH GOOGLE
 
-        app.put('/users', async(req, res) =>{
+        app.put('/users', async (req, res) =>{
           const user = req.body 
-          console.log('put', user)
+          
           const filter = { email: user.email }
           const options = { upsert:true }
           const updateDoc = { $set: user}
@@ -71,6 +71,33 @@ async function run(){
           res.json(result)
         })
   
+        // PUT API FOR USERS THOSE WANT TO BECOME ADMIN
+
+        app.put('/users/admin', async (req, res) =>{
+          
+          const user = req.body 
+          console.log('put', user)
+          const filter = { email: user.email}
+          const updateDoc = { $set: {role: 'admin'} }
+          const result = await usersCollection.updateOne(filter, updateDoc)
+         
+          res.json(result)
+        })
+
+
+        // GET API TO GET ONLY ADMIN USER BY EMAIL
+
+        app.get('/users/:email', async (req, res) => {
+
+          const email = req.params.email 
+          const query = {email: email}
+          const user = await usersCollection.findOne(query)
+          let isAdmin = false 
+          if(user?.role === 'admin'){
+            isAdmin = true 
+          }
+          res.json({admin:isAdmin})
+        })
 
 
     }
