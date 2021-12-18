@@ -6,6 +6,7 @@ const { MongoClient } = require('mongodb');
 const port = process.env.PORT ||  5000 
 const admin = require("firebase-admin");
 const serviceAccount = require('./incare-health-firebase-adminsdk.json');
+const ObjectId = require('mongodb').ObjectId
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -57,8 +58,61 @@ async function run(){
         const database = client.db('incare_health')
         const appointmentCollection = database.collection('appointments')
         const usersCollection = database.collection('users')
+        const servicesCollection = database.collection('services')
+        const doctorsCollection = database.collection('doctors')
         
 
+
+
+        // POST API FOR DOCTORS 
+
+        app.post('/doctors', async (req, res) => {
+          const doctor = req.body 
+          const result = await doctorsCollection.insertOne(doctor)
+          res.json(result)
+        })
+
+
+        // GET API FOR DOCTORS 
+
+         app.get('/doctors', async (req,res) =>{
+            const cursor = doctorsCollection.find({})
+            const doctors = await cursor.toArray()
+            res.send(doctors)
+        })
+
+
+        // GET API FOR DOCTOR DETAILS PAGE 
+
+        app.get('/doctors/:id', async (req, res) =>{
+          const id = req.params.id 
+          const query = { _id: ObjectId(id) }
+          const doctor = await doctorsCollection.findOne(query)
+          res.send(doctor)
+        })
+
+        // POST API FOR SERVICES 
+        app.post('/services', async (req,res) =>{
+          const service = req.body 
+          const result = await servicesCollection.insertOne(service)
+          res.json(result)
+        })
+
+        // GET API FOR SERVICES 
+
+        app.get('/services', async (req,res) =>{
+          const cursor = servicesCollection.find({})
+          const services = await cursor.toArray()
+          res.send(services)
+        })
+
+        // GET API FOR SERVICE DETAILS 
+        app.get('/services/:id', async (req, res) =>{
+          const id = req.params.id 
+          const query = { _id: ObjectId(id) }
+          const service = await servicesCollection.findOne(query)
+          res.send(service)
+        })
 
 
         //  POST API FOR APPOINTMENTS 
