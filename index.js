@@ -4,17 +4,50 @@ const cors = require('cors')
 require('dotenv').config()
 const { MongoClient } = require('mongodb');
 const port = process.env.PORT ||  5000 
+const admin = require("firebase-admin");
+const serviceAccount = require('./incare-health-firebase-adminsdk.json');
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 // MIDDLEWRER HERE
 app.use(cors())
 app.use(express.json())
 
 
+
+// incare-health-firebase-adminsdk.json
+
+
+
+
+
+
+
+
+
 // server setup + database connection 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.1yfcy.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+
+async function verifyToken(req, res, next){
+  if(req.headers.authorization.startsWith('Bearer ')){
+    const token = req.headers.authorization.split(' ')[1]
+
+    try{
+      const decodedUser = await admin.auth().verifyIdToken(token)
+      req.decodedEmail = decodedUser.email
+    }
+    catch{}
+  }
+  next()
+}
+
+
+
 
 async function run(){
 
@@ -73,15 +106,24 @@ async function run(){
   
         // PUT API FOR USERS THOSE WANT TO BECOME ADMIN
 
-        app.put('/users/admin', async (req, res) =>{
+        app.put('/users/admin', verifyToken, async (req, res) =>{
           
           const user = req.body 
-          console.log('put', user)
-          const filter = { email: user.email}
-          const updateDoc = { $set: {role: 'admin'} }
-          const result = await usersCollection.updateOne(filter, updateDoc)
-         
-          res.json(result)
+          const requester = req.decodedEmail
+          if(requester){
+            const requesterAccount = await usersCollection.findOne({email:requester})
+            if(requesterAccount.role === 'admin'){
+              const filter = { email: user.email}
+              const updateDoc = { $set: {role: 'admin'} }
+              const result = await usersCollection.updateOne(filter, updateDoc)
+             
+              res.json(result)
+            }
+          }
+          else{
+            res.status(403).json({message:'Not Permission'})
+          }
+
         })
 
 
